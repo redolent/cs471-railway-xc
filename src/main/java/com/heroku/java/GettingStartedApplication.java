@@ -5,6 +5,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -38,6 +40,15 @@ public class GettingStartedApplication {
             while (resultSet.next()) {
                 output.add("Read from DB: " + resultSet.getTimestamp("tick"));
             }
+            // Also include any submitted values from the `inputs` table so they appear on /database
+            try {
+                final var inputsRs = statement.executeQuery("SELECT value, created_at FROM inputs ORDER BY created_at DESC");
+                while (inputsRs.next()) {
+                    output.add("Input from DB: " + inputsRs.getString("value") + " at " + inputsRs.getTimestamp("created_at"));
+                }
+            } catch (Throwable ignore) {
+                // If `inputs` table doesn't exist yet, ignore — ticks still shown
+            }
             
             System.out.println("Print statement inside the /database function. Sam Stewart");
 
@@ -46,6 +57,28 @@ public class GettingStartedApplication {
 
         } catch (Throwable t) {
             model.put("message", t.getMessage());
+            return "error";
+        }
+    }
+
+    @GetMapping("/dbinput")
+    public String dbinputForm() {
+        return "dbinput";
+    }
+
+    @PostMapping("/dbinput")
+    String dbinput(@RequestParam(name = "value", required = false, defaultValue = "") String value) {
+        try (Connection connection = dataSource.getConnection()) {
+            final var statement = connection.createStatement();
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS inputs (id serial, value text, created_at timestamp)");
+
+            final var insertPs = connection.prepareStatement("INSERT INTO inputs(value, created_at) VALUES (?, now())");
+            insertPs.setString(1, value == null ? "" : value);
+            insertPs.executeUpdate();
+
+            return "redirect:/database";
+
+        } catch (Throwable t) {
             return "error";
         }
     }

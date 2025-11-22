@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout (~{::body},'db')}">
+<body>
+
+<div class="container">
+    <h1>Submit Input</h1>
+    <form th:action="@{/dbinput}" method="post" style="margin-bottom:1rem;">
+        <input type="text" name="value" placeholder="Enter value" style="padding:0.4rem; width:60%" />
+        <button type="submit" style="padding:0.4rem">Submit</button>
+    </form>
+    <p><a th:href="@{/database}">View database records</a></p>
+</div>
+
+</body>
+</html>
