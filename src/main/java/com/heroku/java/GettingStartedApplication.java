@@ -38,6 +38,8 @@ public class GettingStartedApplication {
             while (resultSet.next()) {
                 output.add("Read from DB: " + resultSet.getTimestamp("tick"));
             }
+            
+            System.out.println("Print statement inside the /database function. Sam Stewart");
 
             model.put("records", output);
             return "database";
